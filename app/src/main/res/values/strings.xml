@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Songshare</string>
+
+    <!-- Home -->
+    <string name="home_hint">Share a song link from YouTube, Spotify, Deezer, Apple Music, SoundCloud or Bandcamp with Songshare, or paste it below.</string>
+    <string name="paste_link">Song link</string>
+    <string name="open">Open</string>
+    <string name="settings">Settings</string>
+    <string name="back">Back</string>
+    <string name="cancel">Cancel</string>
+
+    <!-- Progress -->
+    <string name="resolving">Finding the song...</string>
+    <string name="downloading">Downloading audio...</string>
+    <string name="downloading_percent">Downloading audio: %1$d%%</string>
+    <string name="notif_channel">Downloads</string>
+
+    <!-- Search -->
+    <string name="search_title">Find on YouTube</string>
+    <string name="search_query">Artist and song</string>
+    <string name="search">Search</string>
+    <string name="pick_candidate">Pick the right one:</string>
+
+    <!-- Trim -->
+    <string name="trim_title">Trim</string>
+    <string name="file_name">File name</string>
+    <string name="start">Start</string>
+    <string name="end">End</string>
+    <string name="clip_length">Clip length: %1$s</string>
+    <string name="preview">Preview</string>
+    <string name="stop">Stop</string>
+    <string name="share">Share</string>
+    <string name="share_with">Send clip with</string>
+    <string name="cut_failed">Could not cut the audio.</string>
+
+    <!-- Save dialog -->
+    <string name="save_title">Save the clip to this device?</string>
+    <string name="always_save">Always save</string>
+    <string name="save">Save</string>
+    <string name="dont_save">Don\'t save</string>
+    <string name="saved">Saved to Download/Songshare</string>
+    <string name="save_failed">Could not save the clip.</string>
+
+    <!-- Errors -->
+    <string name="error_no_link">No link found in the shared text.</string>
+    <string name="error_unsupported">This link is not supported.</string>
+    <string name="error_metadata">Could not read the song name. Type it below.</string>
+    <string name="error_no_api_key">Spotify API keys are missing in Settings. Type the song below.</string>
+    <string name="error_search">YouTube search failed. Check your connection.</string>
+    <string name="error_no_results">No results.</string>
+    <string name="error_download">Download failed.</string>
+
+    <!-- Settings -->
+    <string name="language">Language</string>
+    <string name="language_system">System default</string>
+    <string name="language_en" translatable="false">English</string>
+    <string name="language_tr" translatable="false">Türkçe</string>
+    <string name="spotify_method">Spotify song name</string>
+    <string name="method_open_graph">Read from the page (no key)</string>
+    <string name="method_web_api">Spotify Web API (own key)</string>
+    <string name="method_manual">Type it myself</string>
+    <string name="api_hint">Create an app on developer.spotify.com and enter its Client ID and Secret. They are stored encrypted on this device.</string>
+    <string name="client_id">Client ID</string>
+    <string name="client_secret">Client Secret</string>
+    <string name="ytdlp" translatable="false">yt-dlp</string>
+    <string name="auto_update">Check for updates on launch</string>
+    <string name="ytdlp_version">Installed version: %1$s</string>
+    <string name="update_now">Update now</string>
+    <string name="update_running">Updating...</string>
+    <string name="update_done">Updated.</string>
+    <string name="update_current">Already up to date.</string>
+    <string name="update_failed">Update failed: %1$s</string>
+    <string name="sharing">Sharing</string>
+    <string name="save_location">Clips are saved to Download/Songshare after sharing.</string>
+</resources>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Music note over scissors-cut bars, inside the 66dp safe zone of a 108dp adaptive icon. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FF25D366"
+        android:pathData="M60,30v28.3c-1.8,-1.1 -3.8,-1.8 -6,-1.8c-6.1,0 -11,4.9 -11,11s4.9,11 11,11s11,-4.9 11,-11V40h10V30H60z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M30,62h4v12h-4zM37,56h4v24h-4zM72,60h4v16h-4zM79,64h4v8h-4z" />
+</vector>

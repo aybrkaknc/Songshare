@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Home -->
+    <string name="home_hint">YouTube, Spotify, Deezer, Apple Music, SoundCloud veya Bandcamp\'tan bir şarkı linkini Songshare ile paylaş ya da aşağıya yapıştır.</string>
+    <string name="paste_link">Şarkı linki</string>
+    <string name="open">Aç</string>
+    <string name="settings">Ayarlar</string>
+    <string name="back">Geri</string>
+    <string name="cancel">İptal</string>
+
+    <!-- Progress -->
+    <string name="resolving">Şarkı aranıyor...</string>
+    <string name="downloading">Ses indiriliyor...</string>
+    <string name="downloading_percent">Ses indiriliyor: %%%1$d</string>
+    <string name="notif_channel">İndirmeler</string>
+
+    <!-- Search -->
+    <string name="search_title">YouTube\'da bul</string>
+    <string name="search_query">Sanatçı ve şarkı</string>
+    <string name="search">Ara</string>
+    <string name="pick_candidate">Doğru olanı seç:</string>
+
+    <!-- Trim -->
+    <string name="trim_title">Kırp</string>
+    <string name="file_name">Dosya adı</string>
+    <string name="start">Başlangıç</string>
+    <string name="end">Bitiş</string>
+    <string name="clip_length">Kesit süresi: %1$s</string>
+    <string name="preview">Dinle</string>
+    <string name="stop">Durdur</string>
+    <string name="share">Paylaş</string>
+    <string name="share_with">Kesiti gönder</string>
+    <string name="cut_failed">Ses kesilemedi.</string>
+
+    <!-- Save dialog -->
+    <string name="save_title">Kesit bu cihaza kaydedilsin mi?</string>
+    <string name="always_save">Her zaman kaydet</string>
+    <string name="save">Kaydet</string>
+    <string name="dont_save">Kaydetme</string>
+    <string name="saved">Download/Songshare klasörüne kaydedildi</string>
+    <string name="save_failed">Kesit kaydedilemedi.</string>
+
+    <!-- Errors -->
+    <string name="error_no_link">Paylaşılan metinde link bulunamadı.</string>
+    <string name="error_unsupported">Bu link desteklenmiyor.</string>
+    <string name="error_metadata">Şarkı adı okunamadı. Aşağıya yaz.</string>
+    <string name="error_no_api_key">Ayarlarda Spotify API anahtarları eksik. Şarkıyı aşağıya yaz.</string>
+    <string name="error_search">YouTube araması başarısız. Bağlantını kontrol et.</string>
+    <string name="error_no_results">Sonuç yok.</string>
+    <string name="error_download">İndirme başarısız.</string>
+
+    <!-- Settings -->
+    <string name="language">Dil</string>
+    <string name="language_system">Sistem dili</string>
+    <string name="spotify_method">Spotify şarkı adı</string>
+    <string name="method_open_graph">Sayfadan oku (anahtarsız)</string>
+    <string name="method_web_api">Spotify Web API (kendi anahtarın)</string>
+    <string name="method_manual">Kendim yazayım</string>
+    <string name="api_hint">developer.spotify.com üzerinde bir uygulama oluştur ve Client ID ile Secret değerlerini gir. Bu cihazda şifreli saklanır.</string>
+    <string name="client_id">Client ID</string>
+    <string name="client_secret">Client Secret</string>
+    <string name="auto_update">Açılışta güncellemeleri kontrol et</string>
+    <string name="ytdlp_version">Yüklü sürüm: %1$s</string>
+    <string name="update_now">Şimdi güncelle</string>
+    <string name="update_running">Güncelleniyor...</string>
+    <string name="update_done">Güncellendi.</string>
+    <string name="update_current">Zaten güncel.</string>
+    <string name="update_failed">Güncelleme başarısız: %1$s</string>
+    <string name="sharing">Paylaşım</string>
+    <string name="save_location">Kesitler paylaşımdan sonra Download/Songshare klasörüne kaydedilir.</string>
+</resources>
