@@ -1,11 +1,18 @@
 package com.aybrkaknc.songshare.audio
 
 import android.content.ContentValues
+import android.content.ContentResolver
 import android.content.Context
+import android.content.Intent
 import android.media.MediaMetadataRetriever
+import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.provider.DocumentsContract
 import android.provider.MediaStore
+import android.widget.Toast
+import com.aybrkaknc.songshare.AppLog
+import com.aybrkaknc.songshare.R
 import com.aybrkaknc.songshare.ytdl.Ytdl
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -90,17 +97,34 @@ object Audio {
         FloatArray(peaks.size) { peaks[it] / max }
     }
 
-    // Copies the clip to Download/Songshare. Returns false when the copy fails.
-    fun saveToDownloads(context: Context, file: File): Boolean = runCatching {
-        if (Build.VERSION.SDK_INT >= 29) {
+    // Clips go to Unedited (as downloaded) and Edited (as trimmed and shared), under the root folder.
+    // The default root is Music/Songshare; a folder the user picked is a SAF tree URI with the same two subfolders.
+    const val ROOT_FOLDER = "Songshare"
+    const val UNEDITED = "Unedited"
+    const val EDITED = "Edited"
+
+    // Creates the default folders up front, so they exist before the first clip. Quietly does nothing if the system refuses.
+    fun ensureDefaultFolders(): Boolean = runCatching {
+        @Suppress("DEPRECATION")
+        val root = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC), ROOT_FOLDER)
+        File(root, UNEDITED).mkdirs() && File(root, EDITED).mkdirs()
+    }.getOrDefault(false)
+
+    // Copies a file into a clip folder under the root. Returns false when the copy fails.
+    fun saveClip(context: Context, file: File, displayName: String, folder: String, treeUri: String): Boolean = runCatching {
+        // Folders deleted by hand are created again before every save.
+        if (treeUri.isBlank()) ensureDefaultFolders()
+        if (treeUri.isNotBlank()) {
+            saveToTree(context, file, displayName, folder, Uri.parse(treeUri))
+        } else if (Build.VERSION.SDK_INT >= 29) {
             val values = ContentValues().apply {
-                put(MediaStore.MediaColumns.DISPLAY_NAME, file.name)
+                put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
                 put(MediaStore.MediaColumns.MIME_TYPE, "audio/mpeg")
-                put(MediaStore.MediaColumns.RELATIVE_PATH, "${Environment.DIRECTORY_DOWNLOADS}/Songshare")
+                put(MediaStore.MediaColumns.RELATIVE_PATH, "${Environment.DIRECTORY_MUSIC}/$ROOT_FOLDER/$folder")
                 put(MediaStore.MediaColumns.IS_PENDING, 1)
             }
             val resolver = context.contentResolver
-            val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: return false
+            val uri = resolver.insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, values) ?: return false
             resolver.openOutputStream(uri)?.use { out -> file.inputStream().use { it.copyTo(out) } }
                 ?: return false
             values.clear()
@@ -108,15 +132,70 @@ object Audio {
             resolver.update(uri, values, null, null)
         } else {
             @Suppress("DEPRECATION")
-            val dir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Songshare")
+            val dir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC), "$ROOT_FOLDER/$folder")
             dir.mkdirs()
-            var target = File(dir, file.name)
+            var target = File(dir, displayName)
             var n = 1
-            while (target.exists()) target = File(dir, "${file.nameWithoutExtension} (${n++}).mp3")
+            while (target.exists()) target = File(dir, "${target.nameWithoutExtension.substringBefore(" (")} (${n++}).mp3")
             file.copyTo(target)
         }
         true
-    }.getOrDefault(false)
+    }.onFailure { AppLog.d("save failed: ${it.message}") }.getOrDefault(false)
+
+    // Songshare/<folder> inside the picked folder, each level created when it is missing.
+    private fun clipDir(resolver: ContentResolver, tree: Uri, folder: String): Uri {
+        val songshare = childDir(resolver, tree, DocumentsContract.getTreeDocumentId(tree), ROOT_FOLDER)
+        return childDir(resolver, tree, DocumentsContract.getDocumentId(songshare), folder)
+    }
+
+    private fun saveToTree(context: Context, file: File, displayName: String, folder: String, tree: Uri) {
+        val resolver = context.contentResolver
+        val dir = clipDir(resolver, tree, folder)
+        val doc = DocumentsContract.createDocument(resolver, dir, "audio/mpeg", displayName) ?: error("no document")
+        resolver.openOutputStream(doc)?.use { out -> file.inputStream().use { it.copyTo(out) } } ?: error("no stream")
+    }
+
+    // Returns the subfolder with this name, creating it when it is not there yet.
+    fun childDir(resolver: ContentResolver, tree: Uri, parentId: String, name: String): Uri {
+        val children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, parentId)
+        val columns = arrayOf(
+            DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+            DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+            DocumentsContract.Document.COLUMN_MIME_TYPE,
+        )
+        resolver.query(children, columns, null, null, null)?.use { c ->
+            while (c.moveToNext()) {
+                if (c.getString(1) == name && c.getString(2) == DocumentsContract.Document.MIME_TYPE_DIR) {
+                    return DocumentsContract.buildDocumentUriUsingTree(tree, c.getString(0))
+                }
+            }
+        }
+        val parent = DocumentsContract.buildDocumentUriUsingTree(tree, parentId)
+        return DocumentsContract.createDocument(resolver, parent, DocumentsContract.Document.MIME_TYPE_DIR, name)
+            ?: error("no folder")
+    }
+
+    // Makes Songshare, then Unedited and Edited inside it, in the folder the user picked. Run again to restore deleted ones.
+    fun ensureTreeFolders(context: Context, treeUri: String): Boolean = runCatching {
+        val tree = Uri.parse(treeUri)
+        clipDir(context.contentResolver, tree, UNEDITED)
+        clipDir(context.contentResolver, tree, EDITED)
+        true
+    }.onFailure { AppLog.d("folders failed: ${it.message}") }.getOrDefault(false)
+
+    // Opens the save folder in the system file manager.
+    fun openFolder(context: Context, treeUri: String) {
+        if (treeUri.isNotBlank()) ensureTreeFolders(context, treeUri) else ensureDefaultFolders()
+        val uri = if (treeUri.isNotBlank()) {
+            val tree = Uri.parse(treeUri)
+            DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree))
+        } else {
+            Uri.parse("content://com.android.externalstorage.documents/document/primary%3AMusic%2F$ROOT_FOLDER")
+        }
+        val intent = Intent(Intent.ACTION_VIEW).setDataAndType(uri, DocumentsContract.Document.MIME_TYPE_DIR)
+        runCatching { context.startActivity(intent) }
+            .onFailure { Toast.makeText(context, R.string.no_folder_app, Toast.LENGTH_SHORT).show() }
+    }
 
     // Characters that are invalid in file names on Android and the systems clips get shared to.
     fun safeFileName(name: String): String =

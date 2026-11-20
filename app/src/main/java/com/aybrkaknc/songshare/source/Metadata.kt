@@ -2,6 +2,8 @@ package com.aybrkaknc.songshare.source
 
 import android.text.Html
 import android.util.Base64
+import com.aybrkaknc.songshare.AppLog
+import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
@@ -18,16 +20,28 @@ object Metadata {
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
     private const val MAX_HTML = 1_500_000
 
+    // Spotify's track page has no title tags in the served HTML, but its embed page carries the track JSON.
+    private fun fromSpotifyEmbed(link: SharedLink): TrackInfo? {
+        val id = spotifyTrackId(resolveRedirects(link.url))
+        if (id == null) {
+            AppLog.d("spotify: no track id in ${link.url}")
+            return null
+        }
+        val html = fetch("https://open.spotify.com/embed/track/$id") ?: return null
+        val match = Regex("\"title\":\"([^\"]+)\",\"artists\":\\[\\{\"name\":\"([^\"]+)\"").find(html)
+        if (match == null) {
+            AppLog.d("spotify: no track data on embed page")
+            return null
+        }
+        return TrackInfo(unescape(match.groupValues[2]), unescape(match.groupValues[1])).takeIf { it.title.isNotBlank() }
+    }
+
     fun fromOpenGraph(link: SharedLink): TrackInfo? {
+        if (link.source == Source.SPOTIFY) return fromSpotifyEmbed(link)
         val html = fetch(link.url) ?: return null
         val tags = metaTags(html)
         val ogTitle = tags["og:title"].orEmpty()
         val info = when (link.source) {
-            Source.SPOTIFY -> {
-                val artist = tags["music:musician_description"]
-                    ?: tags["og:description"]?.split(" · ")?.firstOrNull()
-                TrackInfo(artist.orEmpty(), ogTitle)
-            }
             Source.APPLE_MUSIC -> splitBy(
                 ogTitle.replace("‎", "")
                     .replace(Regex("""\s*(on|[-–])\s*Apple Music\s*$"""), "")
@@ -62,7 +76,7 @@ object Metadata {
             conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
             conn.outputStream.use { it.write("grant_type=client_credentials".toByteArray()) }
             JSONObject(conn.inputStream.bufferedReader().use { it.readText() }).getString("access_token")
-        }.getOrNull() ?: return null
+        }.onFailure { AppLog.d("spotify token failed: ${it.message}") }.getOrNull() ?: return null
         return runCatching {
             val id = URLEncoder.encode(trackId, "UTF-8")
             val conn = URL("https://api.spotify.com/v1/tracks/$id").openConnection() as HttpURLConnection
@@ -73,7 +87,7 @@ object Metadata {
             val artists = json.getJSONArray("artists")
             val names = (0 until artists.length()).map { artists.getJSONObject(it).getString("name") }
             TrackInfo(names.joinToString(", "), json.getString("name"))
-        }.getOrNull()
+        }.onFailure { AppLog.d("spotify track failed: ${it.message}") }.getOrNull()
     }
 
     // The text a music app shares next to the link, minus filler words, as a last-resort query.
@@ -127,7 +141,7 @@ object Metadata {
             }
             String(buf, 0, total)
         }
-    }.getOrNull()
+    }.onFailure { AppLog.d("fetch failed: ${it.message}") }.getOrNull()
 
     // <meta property|name="key" content="value"> in any attribute order.
     private fun metaTags(html: String): Map<String, String> {
@@ -143,6 +157,8 @@ object Metadata {
         }
         return result
     }
+
+    private fun unescape(s: String) = runCatching { JSONArray("[\"$s\"]").getString(0) }.getOrDefault(s)
 
     private fun decode(s: String) = Html.fromHtml(s, Html.FROM_HTML_MODE_LEGACY).toString().trim()
 }

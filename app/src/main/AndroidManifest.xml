@@ -10,6 +10,11 @@
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
 
+    <!-- The WhatsApp button sends straight to WhatsApp's contact list. -->
+    <queries>
+        <package android:name="com.whatsapp" />
+    </queries>
+
     <application
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
@@ -26,6 +31,17 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+
+        <!-- Its own task, so the translucent panel sits over the sharing app instead of over the full page. -->
+        <activity
+            android:name=".ShareActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTask"
+            android:taskAffinity="com.aybrkaknc.songshare.share"
+            android:theme="@style/Theme.Songshare.Sheet"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />

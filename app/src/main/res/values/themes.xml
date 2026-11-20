@@ -1,10 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Songshare" parent="android:Theme.Material.NoActionBar">
-        <item name="android:windowBackground">@color/bg</item>
+    <!-- Full page, opened from the launcher icon. -->
+    <style name="Theme.Songshare" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">#FFFFFBFE</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@color/bg</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
-    <color name="bg">#FF121212</color>
-    <color name="accent">#FF25D366</color>
+
+    <!-- Translucent so the app the link was shared from stays visible behind the bottom panel. -->
+    <style name="Theme.Songshare.Sheet" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
 </resources>

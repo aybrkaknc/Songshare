@@ -1,15 +1,13 @@
 package com.aybrkaknc.songshare
 
 import android.content.Context
-import androidx.annotation.StringRes
 import com.aybrkaknc.songshare.audio.Audio
 import com.aybrkaknc.songshare.service.DownloadService
+import com.aybrkaknc.songshare.service.Notifications
 import com.aybrkaknc.songshare.settings.Prefs
-import com.aybrkaknc.songshare.settings.SpotifyMethod
 import com.aybrkaknc.songshare.source.Link
 import com.aybrkaknc.songshare.source.Metadata
 import com.aybrkaknc.songshare.source.Source
-import com.aybrkaknc.songshare.source.TrackInfo
 import com.aybrkaknc.songshare.ytdl.Candidate
 import com.aybrkaknc.songshare.ytdl.Downloaded
 import com.aybrkaknc.songshare.ytdl.Ytdl
@@ -18,73 +16,155 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
-sealed interface Step {
-    data object Home : Step
-    data object Resolving : Step
-
-    // info is what the source link gave; query starts from it and the user may edit it.
-    data class Search(
-        val info: TrackInfo?,
-        val query: String,
-        val candidates: List<Candidate> = emptyList(),
-        val loading: Boolean = false,
-        @param:StringRes val error: Int? = null,
-    ) : Step
-
-    data class Downloading(val progress: Float) : Step
-    data class Trim(val file: File, val name: String, val durationMs: Long) : Step
-    data class Failed(@param:StringRes val message: Int, val detail: String? = null) : Step
+// The shared link that is going through the find-download-trim-send steps.
+data class Song(val id: Long, val text: String) {
+    val label: String get() = Link.parse(text)?.url ?: text
 }
 
-sealed interface UpdateState {
-    data object Idle : UpdateState
-    data object Running : UpdateState
-    data class Done(val updated: Boolean) : UpdateState
-    data class Failed(val detail: String?) : UpdateState
-}
-
-// The current link-to-clip job. Lives as long as the process, so a running download survives rotation.
+// One song at a time. Lives as long as the process, so the work goes on while the panel is closed.
 object Session {
     val step = MutableStateFlow<Step>(Step.Home)
-    val update = MutableStateFlow<UpdateState>(UpdateState.Idle)
+    val active = MutableStateFlow<Song?>(null)
+
+    // A link shared while a song is in progress; the user decides whether it replaces the current one.
+    val pendingReplace = MutableStateFlow<String?>(null)
+    private val visible = MutableStateFlow(false)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var job: Job? = null
-    private var autoUpdated = false
+    private var nextId = 0L
+    private const val LONG_RESULT_SEC = 600
+    private var attached = false
 
-    fun open(context: Context, text: String?) {
+    // The song that starts as soon as the running download has stopped.
+    private var replacement: Song? = null
+
+    // Keeps the status notification in line with the active step while the panel is closed.
+    fun attach(context: Context) {
+        if (attached) return
+        attached = true
+        val app = context.applicationContext
+        scope.launch {
+            combine(step, visible) { s, shown ->
+                // The download service shows its own progress notification.
+                s.takeUnless { shown || active.value == null || it is Step.Downloading }
+            }.distinctUntilChanged().collect { waiting ->
+                Notifications.status(withLanguage(app, Prefs(app).language), waiting)
+            }
+        }
+    }
+
+    fun setVisible(shown: Boolean) {
+        visible.value = shown
+    }
+
+    fun submit(context: Context, text: String) {
+        if (text.isBlank()) return
+        val trimmed = text.trim()
+        when {
+            active.value == null -> start(context, Song(nextId++, trimmed))
+            // Searching or waiting on the trim screen is not work in progress, so the new link replaces it without asking.
+            step.value is Step.Search || step.value is Step.Trim -> {
+                pendingReplace.value = trimmed
+                confirmReplace(context)
+            }
+            else -> pendingReplace.value = trimmed
+        }
+    }
+
+    fun keepCurrent() {
+        pendingReplace.value = null
+    }
+
+    fun confirmReplace(context: Context) {
+        val text = pendingReplace.value ?: return
+        pendingReplace.value = null
+        val song = Song(nextId++, text)
+        job?.cancel()
+        if (step.value is Step.Downloading) {
+            // The new song starts once the running download has stopped.
+            replacement = song
+            DownloadService.cancel(context)
+        } else {
+            clearFiles(context)
+            start(context, song)
+        }
+    }
+
+    // Ends the song (sent, skipped or canceled) and goes back to the start.
+    fun finish(context: Context) {
+        job?.cancel()
+        replacement = null
+        if (step.value is Step.Downloading) {
+            step.value = Step.Home
+            DownloadService.cancel(context)
+        }
+        clearFiles(context)
+        active.value = null
+        step.value = Step.Home
+    }
+
+    fun retry(context: Context) {
+        active.value?.let { open(context, it.text) }
+    }
+
+    fun typeManually() {
+        step.value = Step.Search(null, "")
+    }
+
+    private fun clearFiles(context: Context) {
+        File(context.cacheDir, "dl").deleteRecursively()
+        File(context.cacheDir, "share").deleteRecursively()
+    }
+
+    private fun start(context: Context, song: Song) {
+        active.value = song
+        open(context, song.text)
+    }
+
+    // Starts the waiting replacement, if there is one. Returns true when it did.
+    private fun startReplacement(context: Context): Boolean {
+        val next = replacement ?: return false
+        replacement = null
+        clearFiles(context)
+        start(context, next)
+        return true
+    }
+
+    private fun open(context: Context, text: String) {
         val link = Link.parse(text)
         when {
-            link == null -> step.value = Step.Failed(R.string.error_no_link)
+            link == null -> {
+                val query = text.trim()
+                step.value = Step.Search(null, query)
+                search(context, query)
+            }
             link.source == Source.UNSUPPORTED -> step.value = Step.Failed(R.string.error_unsupported, link.url)
             link.source == Source.YOUTUBE -> startDownload(context, link.url, null)
             else -> {
                 job?.cancel()
-                step.value = Step.Resolving
+                // The song is looked up on the search screen itself, which shows a spinner until the name is known.
+                step.value = Step.Search(null, "", loading = true)
                 job = scope.launch {
                     val prefs = Prefs(context)
-                    // The method setting only concerns Spotify; the other services have no public API to choose.
-                    val method = if (link.source == Source.SPOTIFY) prefs.spotifyMethod else SpotifyMethod.OPEN_GRAPH
-                    if (method == SpotifyMethod.MANUAL) {
-                        step.value = Step.Search(null, "")
-                        return@launch
-                    }
+                    AppLog.d("open ${link.source}")
                     val info = withContext(Dispatchers.IO) {
-                        when (method) {
-                            SpotifyMethod.WEB_API -> Metadata.fromSpotifyApi(link, prefs.spotifyClientId, prefs.spotifyClientSecret)
-                            else -> Metadata.fromOpenGraph(link)
-                        } ?: Metadata.fromSharedText(link)
-                    }
-                    if (info == null) {
-                        val error = if (method == SpotifyMethod.WEB_API && prefs.spotifyClientId.isBlank()) {
-                            R.string.error_no_api_key
+                        // Spotify API first when keys are set; the page read and shared text are the fallbacks.
+                        val api = if (link.source == Source.SPOTIFY) {
+                            Metadata.fromSpotifyApi(link, prefs.spotifyClientId, prefs.spotifyClientSecret)
                         } else {
-                            R.string.error_metadata
+                            null
                         }
-                        step.value = Step.Search(null, "", error = error)
+                        api ?: Metadata.fromOpenGraph(link) ?: Metadata.fromSharedText(link)
+                    }
+                    AppLog.d("metadata: ${info?.query ?: "none"}")
+                    if (info == null) {
+                        step.value = Step.Search(null, "", error = R.string.error_metadata)
                     } else {
                         step.value = Step.Search(info, info.query)
                         search(context, info.query)
@@ -97,12 +177,23 @@ object Session {
     fun search(context: Context, query: String) {
         val current = step.value as? Step.Search ?: return
         if (query.isBlank()) return
+        if (Link.parse(query) != null) {
+            open(context, query)
+            return
+        }
         step.value = current.copy(query = query, loading = true, error = null)
         job?.cancel()
         job = scope.launch {
             val result = runCatching { Ytdl.search(context, query.trim()) }
+            result.exceptionOrNull()?.let { AppLog.d("search failed: ${it.message}") }
             val s = step.value as? Step.Search ?: return@launch
-            val list = result.getOrDefault(emptyList())
+            val all = result.getOrDefault(emptyList())
+            // Albums and mixes are left out when the setting is on; if that would leave nothing, they stay.
+            val list = if (Prefs(context).hideLongResults) {
+                all.filter { it.durationSec <= LONG_RESULT_SEC }.ifEmpty { all }
+            } else {
+                all
+            }
             step.value = s.copy(
                 loading = false,
                 candidates = list,
@@ -124,23 +215,31 @@ object Session {
             info.artist.isBlank() -> info.title
             else -> "${info.artist} - ${info.title}"
         }
-        startDownload(context, candidate.url, name)
+        startDownload(context, candidate.url, name, candidate)
     }
 
-    private fun startDownload(context: Context, url: String, name: String?) {
+    private fun startDownload(context: Context, url: String, name: String?, picked: Candidate? = null) {
         job?.cancel()
-        step.value = Step.Downloading(-1f)
+        step.value = Step.Downloading(-1f, picked)
         DownloadService.start(context, url, name)
     }
 
     fun cancelDownload(context: Context) = DownloadService.cancel(context)
 
+    fun onConverting() {
+        (step.value as? Step.Downloading)?.let { step.value = it.copy(converting = true) }
+    }
+
     fun onProgress(progress: Float) {
-        if (step.value is Step.Downloading) step.value = Step.Downloading(progress)
+        (step.value as? Step.Downloading)?.let { step.value = it.copy(progress = progress) }
     }
 
     suspend fun onDownloaded(context: Context, result: Downloaded, name: String?) {
+        if (startReplacement(context)) return
         val duration = withContext(Dispatchers.IO) { Audio.durationMs(result.file) }
+        // The untouched download is kept as soon as it arrives.
+        val unedited = Audio.safeFileName(name ?: result.title.ifBlank { result.file.nameWithoutExtension }) + ".mp3"
+        withContext(Dispatchers.IO) { Audio.saveClip(context, result.file, unedited, Audio.UNEDITED, Prefs(context).saveDir) }
         val fallback = when {
             result.title.isBlank() -> result.file.nameWithoutExtension
             result.artist.isBlank() -> result.title
@@ -154,35 +253,18 @@ object Session {
         step.value = Step.Trim(result.file, name ?: fallback, duration)
     }
 
-    fun onFailed(detail: String?) {
+    fun onFailed(context: Context, detail: String?) {
+        if (startReplacement(context)) return
+        if (step.value !is Step.Downloading) return
+        AppLog.d("download failed: $detail")
         step.value = Step.Failed(R.string.error_download, detail)
     }
 
-    fun onCanceled() {
+    // The download was canceled from the panel or the notification, or to make room for a new song.
+    fun onCanceled(context: Context) {
+        if (startReplacement(context)) return
+        if (step.value !is Step.Downloading) return
         step.value = Step.Home
-    }
-
-    // Back to the start screen; downloaded and trimmed files are no longer needed.
-    fun reset(context: Context) {
-        job?.cancel()
-        if (step.value is Step.Downloading) DownloadService.cancel(context)
-        step.value = Step.Home
-        File(context.cacheDir, "dl").deleteRecursively()
-        File(context.cacheDir, "share").deleteRecursively()
-    }
-
-    fun autoUpdate(context: Context) {
-        if (autoUpdated || !Prefs(context).autoUpdate) return
-        autoUpdated = true
-        updateNow(context)
-    }
-
-    fun updateNow(context: Context) {
-        if (update.value == UpdateState.Running) return
-        update.value = UpdateState.Running
-        scope.launch {
-            update.value = runCatching { Ytdl.update(context.applicationContext) }
-                .fold({ UpdateState.Done(it) }, { UpdateState.Failed(it.message) })
-        }
+        finish(context)
     }
 }

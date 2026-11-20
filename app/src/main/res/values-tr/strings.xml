@@ -2,23 +2,26 @@
 <resources>
     <!-- Home -->
     <string name="home_hint">YouTube, Spotify, Deezer, Apple Music, SoundCloud veya Bandcamp\'tan bir şarkı linkini Songshare ile paylaş ya da aşağıya yapıştır.</string>
-    <string name="paste_link">Şarkı linki</string>
-    <string name="open">Aç</string>
+    <string name="paste_link">Şarkı ara veya link yapıştır</string>
     <string name="settings">Ayarlar</string>
     <string name="back">Geri</string>
     <string name="cancel">İptal</string>
 
     <!-- Progress -->
     <string name="resolving">Şarkı aranıyor...</string>
+    <string name="searching">Aranıyor...</string>
+    <string name="converting">MP3\'e dönüştürülüyor...</string>
+    <string name="preparing">Hazırlanıyor...</string>
     <string name="downloading">Ses indiriliyor...</string>
     <string name="downloading_percent">Ses indiriliyor: %%%1$d</string>
+    <string name="progress_percent">%%%1$d</string>
     <string name="notif_channel">İndirmeler</string>
 
     <!-- Search -->
-    <string name="search_title">YouTube\'da bul</string>
-    <string name="search_query">Sanatçı ve şarkı</string>
+    <string name="search_query">Sanatçı ve şarkı veya link</string>
     <string name="search">Ara</string>
-    <string name="pick_candidate">Doğru olanı seç:</string>
+    <string name="hide_long">Uzun videoları gizle</string>
+    <string name="hide_long_summary">Albüm ve mix gibi 10 dakikadan uzun arama sonuçları listelenmez.</string>
 
     <!-- Trim -->
     <string name="trim_title">Kırp</string>
@@ -37,14 +40,18 @@
     <string name="always_save">Her zaman kaydet</string>
     <string name="save">Kaydet</string>
     <string name="dont_save">Kaydetme</string>
-    <string name="saved">Download/Songshare klasörüne kaydedildi</string>
+    <string name="saved">Kesit kayıt klasörüne kaydedildi</string>
+    <string name="open_folder">Kayıt klasörünü aç</string>
+    <string name="no_folder_app">Bu klasörü açabilecek bir uygulama yok.</string>
+    <string name="save_dir">Kayıt klasörü</string>
+    <string name="save_dir_default">Müzik/Clipped Songs</string>
+    <string name="save_dir_reset">Varsayılan klasöre dön</string>
     <string name="save_failed">Kesit kaydedilemedi.</string>
 
     <!-- Errors -->
     <string name="error_no_link">Paylaşılan metinde link bulunamadı.</string>
     <string name="error_unsupported">Bu link desteklenmiyor.</string>
     <string name="error_metadata">Şarkı adı okunamadı. Aşağıya yaz.</string>
-    <string name="error_no_api_key">Ayarlarda Spotify API anahtarları eksik. Şarkıyı aşağıya yaz.</string>
     <string name="error_search">YouTube araması başarısız. Bağlantını kontrol et.</string>
     <string name="error_no_results">Sonuç yok.</string>
     <string name="error_download">İndirme başarısız.</string>
@@ -52,11 +59,11 @@
     <!-- Settings -->
     <string name="language">Dil</string>
     <string name="language_system">Sistem dili</string>
-    <string name="spotify_method">Spotify şarkı adı</string>
-    <string name="method_open_graph">Sayfadan oku (anahtarsız)</string>
-    <string name="method_web_api">Spotify Web API (kendi anahtarın)</string>
-    <string name="method_manual">Kendim yazayım</string>
-    <string name="api_hint">developer.spotify.com üzerinde bir uygulama oluştur ve Client ID ile Secret değerlerini gir. Bu cihazda şifreli saklanır.</string>
+    <string name="general">Genel</string>
+    <string name="api_configured">Yapılandırıldı</string>
+    <string name="api_not_configured">Yapılandırılmadı</string>
+    <string name="troubleshooting">Sorun giderme</string>
+    <string name="api_hint">İsteğe bağlı. developer.spotify.com\'dan alınan Client ID ve Secret girilirse şarkı adı önce Spotify API ile okunur. Girilmezse ya da yanlışsa sayfadan okunur. Bu cihazda şifreli saklanır.</string>
     <string name="client_id">Client ID</string>
     <string name="client_secret">Client Secret</string>
     <string name="auto_update">Açılışta güncellemeleri kontrol et</string>
@@ -67,5 +74,31 @@
     <string name="update_current">Zaten güncel.</string>
     <string name="update_failed">Güncelleme başarısız: %1$s</string>
     <string name="sharing">Paylaşım</string>
-    <string name="save_location">Kesitler paylaşımdan sonra Download/Songshare klasörüne kaydedilir.</string>
+    <string name="save_location">Kesitler paylaşımdan sonra kayıt klasörüne kaydedilir.</string>
+
+    <!-- Panel and queue -->
+    <string name="moved_to_notification">Bildirime taşındı</string>
+    <string name="remove">Kaldır</string>
+    <string name="status_pick">Doğru videoyu seç</string>
+    <string name="status_trim">Kırpmaya ve paylaşmaya hazır</string>
+    <string name="status_failed">Bir sorun oldu</string>
+    <string name="trim_and_share">Kırp ve paylaş</string>
+    <string name="replace_title">Mevcut şarkı iptal edilsin mi?</string>
+    <string name="replace_text">Bir şarkı üzerinde zaten işlem yapılıyor. İptal edip yenisini başlatmak ister misin?</string>
+    <string name="replace_confirm">İptal et ve yenisini başlat</string>
+    <string name="replace_keep">Mevcut kalsın</string>
+    <string name="perm_title">Bildirim izni gerekli</string>
+    <string name="perm_text">Songshare panel kapandığında da çalışmaya devam eder ve ilerlemeyi bildirimde gösterir. Devam etmek için bildirimlere izin ver.</string>
+    <string name="perm_allow">İzin ver</string>
+    <string name="perm_settings">Ayarları aç</string>
+    <string name="whatsapp_missing">WhatsApp yüklü değil.</string>
+    <string name="retry">Tekrar dene</string>
+    <string name="type_manually">Şarkıyı yaz</string>
+    <string name="skip">Geç</string>
+
+    <!-- Log -->
+    <string name="log">Günlük</string>
+    <string name="log_empty">Henüz kayıt yok.</string>
+    <string name="log_clear">Günlüğü temizle</string>
+    <string name="log_copy">Günlüğü kopyala</string>
 </resources>

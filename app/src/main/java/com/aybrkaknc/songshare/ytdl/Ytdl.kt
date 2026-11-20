@@ -13,7 +13,7 @@ import org.json.JSONObject
 import java.io.File
 import java.io.IOException
 
-data class Candidate(val url: String, val title: String, val channel: String, val durationSec: Int)
+data class Candidate(val url: String, val title: String, val channel: String, val durationSec: Int, val thumb: String)
 
 data class Downloaded(val file: File, val artist: String, val title: String)
 
@@ -51,7 +51,7 @@ object Ytdl {
 
     suspend fun search(context: Context, query: String): List<Candidate> = withContext(Dispatchers.IO) {
         ready(context)
-        val request = YoutubeDLRequest("ytsearch5:$query")
+        val request = YoutubeDLRequest("ytsearch10:$query")
             .addOption("--flat-playlist")
             .addOption("--dump-single-json")
         val response = YoutubeDL.getInstance().execute(request)
@@ -64,6 +64,7 @@ object Ytdl {
                 title = e.optString("title"),
                 channel = e.optString("channel").ifBlank { e.optString("uploader") },
                 durationSec = e.optDouble("duration", 0.0).toInt(),
+                thumb = "https://i.ytimg.com/vi/$id/mqdefault.jpg",
             )
         }
     }
@@ -73,6 +74,7 @@ object Ytdl {
         context: Context,
         url: String,
         processId: String,
+        onConverting: () -> Unit,
         onProgress: (Float) -> Unit,
     ): Downloaded = withContext(Dispatchers.IO) {
         ready(context)
@@ -84,7 +86,10 @@ object Ytdl {
             .addOption("--audio-quality", "192K")
             .addOption("--embed-metadata")
             .addOption("-o", "${dir.absolutePath}/%(id)s.%(ext)s")
-        YoutubeDL.getInstance().execute(request, processId) { progress, _, _ -> onProgress(progress) }
+        YoutubeDL.getInstance().execute(request, processId) { progress, _, line ->
+            if (line.contains("[ExtractAudio]")) onConverting()
+            onProgress(progress)
+        }
         val file = dir.listFiles()?.firstOrNull { it.extension == "mp3" } ?: throw IOException("no mp3 output")
         val tags = MediaMetadataRetriever()
         try {

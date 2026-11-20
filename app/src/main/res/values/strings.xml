@@ -4,23 +4,26 @@
 
     <!-- Home -->
     <string name="home_hint">Share a song link from YouTube, Spotify, Deezer, Apple Music, SoundCloud or Bandcamp with Songshare, or paste it below.</string>
-    <string name="paste_link">Song link</string>
-    <string name="open">Open</string>
+    <string name="paste_link">Search a song or paste a link</string>
     <string name="settings">Settings</string>
     <string name="back">Back</string>
     <string name="cancel">Cancel</string>
 
     <!-- Progress -->
     <string name="resolving">Finding the song...</string>
+    <string name="searching">Searching...</string>
+    <string name="converting">Converting to MP3...</string>
+    <string name="preparing">Preparing...</string>
     <string name="downloading">Downloading audio...</string>
     <string name="downloading_percent">Downloading audio: %1$d%%</string>
+    <string name="progress_percent">%1$d%%</string>
     <string name="notif_channel">Downloads</string>
 
     <!-- Search -->
-    <string name="search_title">Find on YouTube</string>
-    <string name="search_query">Artist and song</string>
+    <string name="search_query">Artist and song, or a link</string>
     <string name="search">Search</string>
-    <string name="pick_candidate">Pick the right one:</string>
+    <string name="hide_long">Hide long videos</string>
+    <string name="hide_long_summary">Search results longer than 10 minutes, like albums and mixes, are not listed.</string>
 
     <!-- Trim -->
     <string name="trim_title">Trim</string>
@@ -39,14 +42,18 @@
     <string name="always_save">Always save</string>
     <string name="save">Save</string>
     <string name="dont_save">Don\'t save</string>
-    <string name="saved">Saved to Download/Songshare</string>
+    <string name="saved">Clip saved to the save folder</string>
+    <string name="open_folder">Open save folder</string>
+    <string name="no_folder_app">No app can open this folder.</string>
+    <string name="save_dir">Save folder</string>
+    <string name="save_dir_default">Music/Clipped Songs</string>
+    <string name="save_dir_reset">Use default folder</string>
     <string name="save_failed">Could not save the clip.</string>
 
     <!-- Errors -->
     <string name="error_no_link">No link found in the shared text.</string>
     <string name="error_unsupported">This link is not supported.</string>
     <string name="error_metadata">Could not read the song name. Type it below.</string>
-    <string name="error_no_api_key">Spotify API keys are missing in Settings. Type the song below.</string>
     <string name="error_search">YouTube search failed. Check your connection.</string>
     <string name="error_no_results">No results.</string>
     <string name="error_download">Download failed.</string>
@@ -56,11 +63,13 @@
     <string name="language_system">System default</string>
     <string name="language_en" translatable="false">English</string>
     <string name="language_tr" translatable="false">Türkçe</string>
-    <string name="spotify_method">Spotify song name</string>
-    <string name="method_open_graph">Read from the page (no key)</string>
-    <string name="method_web_api">Spotify Web API (own key)</string>
-    <string name="method_manual">Type it myself</string>
-    <string name="api_hint">Create an app on developer.spotify.com and enter its Client ID and Secret. They are stored encrypted on this device.</string>
+    <string name="spotify_api" translatable="false">Spotify API</string>
+    <string name="spotify" translatable="false">Spotify</string>
+    <string name="general">General</string>
+    <string name="api_configured">Configured</string>
+    <string name="api_not_configured">Not configured</string>
+    <string name="troubleshooting">Troubleshooting</string>
+    <string name="api_hint">Optional. With a Client ID and Secret from developer.spotify.com, song names are read from the Spotify API first. Without them, or if they are wrong, the name is read from the page. Stored encrypted on this device.</string>
     <string name="client_id">Client ID</string>
     <string name="client_secret">Client Secret</string>
     <string name="ytdlp" translatable="false">yt-dlp</string>
@@ -72,5 +81,32 @@
     <string name="update_current">Already up to date.</string>
     <string name="update_failed">Update failed: %1$s</string>
     <string name="sharing">Sharing</string>
-    <string name="save_location">Clips are saved to Download/Songshare after sharing.</string>
+    <string name="save_location">Clips are saved to the save folder after sharing.</string>
+
+    <!-- Panel and queue -->
+    <string name="moved_to_notification">Moved to notifications</string>
+    <string name="remove">Remove</string>
+    <string name="status_pick">Pick the right video</string>
+    <string name="status_trim">Ready to trim and share</string>
+    <string name="status_failed">Something went wrong</string>
+    <string name="trim_and_share">Trim and share</string>
+    <string name="replace_title">Cancel the current song?</string>
+    <string name="replace_text">A song is already in progress. Cancel it and start the new one?</string>
+    <string name="replace_confirm">Cancel and start new</string>
+    <string name="replace_keep">Keep current</string>
+    <string name="perm_title">Notifications needed</string>
+    <string name="perm_text">Songshare keeps working when you close the panel and shows its progress in a notification. Allow notifications to continue.</string>
+    <string name="perm_allow">Allow</string>
+    <string name="perm_settings">Open settings</string>
+    <string name="share_whatsapp" translatable="false">WhatsApp</string>
+    <string name="whatsapp_missing">WhatsApp is not installed.</string>
+    <string name="retry">Try again</string>
+    <string name="type_manually">Type the song</string>
+    <string name="skip">Skip</string>
+
+    <!-- Log -->
+    <string name="log">Log</string>
+    <string name="log_empty">No entries yet.</string>
+    <string name="log_clear">Clear log</string>
+    <string name="log_copy">Copy log</string>
 </resources>

@@ -61,7 +61,7 @@ class DownloadService : Service() {
         scope.launch {
             try {
                 var shown = 0f
-                val result = Ytdl.download(this@DownloadService, url, id) { p ->
+                val result = Ytdl.download(this@DownloadService, url, id, { Session.onConverting() }) { p ->
                     Session.onProgress(p)
                     if (p - shown >= 1f) {
                         shown = p
@@ -72,9 +72,9 @@ class DownloadService : Service() {
             } catch (e: CancellationException) {
                 throw e
             } catch (e: YoutubeDL.CanceledException) {
-                if (next == null) Session.onCanceled()
+                if (next == null) Session.onCanceled(applicationContext)
             } catch (e: Exception) {
-                if (next == null) Session.onFailed(e.message)
+                if (next == null) Session.onFailed(applicationContext, e.message)
             } finally {
                 processId = null
                 val queued = next
