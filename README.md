@@ -10,6 +10,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
+  <img src="icons/icon.png" alt="Songshare logo" width="120" />
   <h3 align="center">Songshare</h3>
 
   <p align="center">
