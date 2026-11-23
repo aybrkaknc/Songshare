@@ -70,8 +70,8 @@ object Metadata {
             val basic = Base64.encodeToString("$clientId:$clientSecret".toByteArray(), Base64.NO_WRAP)
             conn.requestMethod = "POST"
             conn.doOutput = true
-            conn.connectTimeout = 15_000
-            conn.readTimeout = 15_000
+            conn.connectTimeout = 6_000
+            conn.readTimeout = 6_000
             conn.setRequestProperty("Authorization", "Basic $basic")
             conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
             conn.outputStream.use { it.write("grant_type=client_credentials".toByteArray()) }
@@ -80,8 +80,8 @@ object Metadata {
         return runCatching {
             val id = URLEncoder.encode(trackId, "UTF-8")
             val conn = URL("https://api.spotify.com/v1/tracks/$id").openConnection() as HttpURLConnection
-            conn.connectTimeout = 15_000
-            conn.readTimeout = 15_000
+            conn.connectTimeout = 6_000
+            conn.readTimeout = 6_000
             conn.setRequestProperty("Authorization", "Bearer $token")
             val json = JSONObject(conn.inputStream.bufferedReader().use { it.readText() })
             val artists = json.getJSONArray("artists")
@@ -117,8 +117,8 @@ object Metadata {
     private fun resolveRedirects(url: String): String = runCatching {
         val conn = URL(url).openConnection() as HttpURLConnection
         conn.instanceFollowRedirects = true
-        conn.connectTimeout = 15_000
-        conn.readTimeout = 15_000
+        conn.connectTimeout = 6_000
+        conn.readTimeout = 6_000
         conn.setRequestProperty("User-Agent", USER_AGENT)
         conn.inputStream.close()
         conn.url.toString()
@@ -127,8 +127,8 @@ object Metadata {
     private fun fetch(url: String): String? = runCatching {
         val conn = URL(url).openConnection() as HttpURLConnection
         conn.instanceFollowRedirects = true
-        conn.connectTimeout = 15_000
-        conn.readTimeout = 15_000
+        conn.connectTimeout = 6_000
+        conn.readTimeout = 6_000
         conn.setRequestProperty("User-Agent", USER_AGENT)
         conn.setRequestProperty("Accept-Language", "en")
         conn.inputStream.bufferedReader().use { reader ->

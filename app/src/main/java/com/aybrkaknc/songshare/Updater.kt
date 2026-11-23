@@ -9,6 +9,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
+private const val DAY_MS = 24L * 60 * 60 * 1000
+
 sealed interface UpdateState {
     data object Idle : UpdateState
     data object Running : UpdateState
@@ -20,11 +22,17 @@ sealed interface UpdateState {
 object Updater {
     val state = MutableStateFlow<UpdateState>(UpdateState.Idle)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    private var autoChecked = false
 
+    // The launch check runs at most once a day; the time of the last check is kept in the settings.
     fun autoUpdate(context: Context) {
-        if (autoChecked || !Prefs(context).autoUpdate) return
-        autoChecked = true
+        val prefs = Prefs(context)
+        val now = System.currentTimeMillis()
+        if (!prefs.autoUpdate) return
+        if (now - prefs.lastUpdateCheckMs < DAY_MS) {
+            AppLog.d("update check: skipped, checked within the last day")
+            return
+        }
+        prefs.lastUpdateCheckMs = now
         updateNow(context)
     }
 

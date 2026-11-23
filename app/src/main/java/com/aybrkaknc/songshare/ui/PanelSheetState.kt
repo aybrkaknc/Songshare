@@ -58,16 +58,32 @@ class PanelSheetState(private val scope: CoroutineScope, val screenHeightDp: Flo
         if (!locked) animateTo(minOf(heightDp, fullHeight), OPEN_MS)
     }
 
-    // The search page lets its content decide the height.
+    // The last height the layout produced in auto mode; a fixed page that hands over to auto eases down to it.
+    private var lastAutoDp: Float? = null
+
+    // The search page lets its content decide the height. Coming from a taller fixed page, the panel first eases down
+    // to the height the start page had last time, then hands control to the layout, so nothing jumps.
     fun useAuto() {
         if (locked) return
         job?.cancel()
-        auto = true
+        val target = lastAutoDp
+        if (target == null || heightDp <= target) {
+            auto = true
+            return
+        }
+        auto = false
+        job = scope.launch {
+            animate(heightDp, target, animationSpec = tween(OPEN_MS)) { v, _ -> heightDp = v }
+            auto = true
+        }
     }
 
     // Auto mode reports the height the layout produced, so a later drag or fit starts from it.
     fun mirror(actualDp: Float) {
-        if (auto) heightDp = actualDp
+        if (auto) {
+            heightDp = actualDp
+            lastAutoDp = actualDp
+        }
     }
 
     // A drag takes over from any running animation or from auto mode.

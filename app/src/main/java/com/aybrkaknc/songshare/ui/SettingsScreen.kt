@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -129,7 +128,7 @@ fun SettingsScreen(onOpenLog: () -> Unit) {
     }
 
     if (languageDialog) {
-        AlertDialog(
+        AppAlertDialog(
             onDismissRequest = { languageDialog = false },
             title = { Text(stringResource(R.string.language)) },
             text = {
@@ -155,7 +154,7 @@ fun SettingsScreen(onOpenLog: () -> Unit) {
     if (apiDialog) {
         var id by remember { mutableStateOf(clientId) }
         var secret by remember { mutableStateOf(clientSecret) }
-        AlertDialog(
+        AppAlertDialog(
             onDismissRequest = { apiDialog = false },
             title = { Text(stringResource(R.string.spotify_api)) },
             text = {

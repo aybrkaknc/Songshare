@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -43,7 +42,6 @@ import com.aybrkaknc.songshare.settings.Prefs
 import com.aybrkaknc.songshare.ui.ActiveCard
 import com.aybrkaknc.songshare.ui.DownloadScreen
 import com.aybrkaknc.songshare.ui.FailedScreen
-import com.aybrkaknc.songshare.ui.HomeScreen
 import com.aybrkaknc.songshare.ui.LogScreen
 import com.aybrkaknc.songshare.ui.PanelHeader
 import com.aybrkaknc.songshare.ui.PanelSheetState
@@ -51,16 +49,42 @@ import com.aybrkaknc.songshare.ui.PermissionCard
 import com.aybrkaknc.songshare.ui.SearchScreen
 import com.aybrkaknc.songshare.ui.SettingsScreen
 import com.aybrkaknc.songshare.ui.SongshareTheme
+import com.aybrkaknc.songshare.ui.AppAlertDialog
+import com.aybrkaknc.songshare.ui.ShareScreen
 import com.aybrkaknc.songshare.ui.TrimScreen
+
+// "Artist - Title" with only the first artist ("A feat. B", "A & B", "A, B" give "A"); null when there is no title.
+private val ARTIST_SEPARATOR = Regex("\\s*(,|;|&|/|\\sfeat\\.?\\s|\\sft\\.?\\s|\\sx\\s)\\s*", RegexOption.IGNORE_CASE)
+
+private fun trimHeading(step: Step.Trim): String? {
+    val artist = step.artist.split(ARTIST_SEPARATOR).first().trim()
+    val song = step.title.trim()
+    return when {
+        song.isBlank() -> null
+        artist.isBlank() -> song
+        else -> "$artist - $song"
+    }
+}
+
+// "system" keeps the device language; otherwise the context is forced to the chosen locale.
+internal fun withLanguage(base: Context, lang: String): Context {
+    if (lang == "system") return base
+    val config = android.content.res.Configuration(base.resources.configuration)
+    config.setLocale(java.util.Locale.forLanguageTag(lang))
+    return base.createConfigurationContext(config)
+}
 
 private enum class Page { MAIN, SETTINGS, LOG }
 
 // Height of the drag handle in dp; the header moves up by this much where the handle is hidden.
 private const val HANDLE_DP = 22f
 
-// Shared by the full-page app (launcher icon) and the bottom panel (share menu): both show the same queue and steps.
+// The panel's steps and queue, drawn by ShareActivity: opened from the share menu or from the launcher icon.
 abstract class PanelActivity : ComponentActivity() {
     private val notificationsOn = mutableStateOf(false)
+
+    // True when the panel was opened from the launcher icon, so the search box takes the focus and the keyboard comes up.
+    private val focusSearch = mutableStateOf(false)
 
     // Links shared before notifications were allowed; they start once the permission is granted.
     private val pending = mutableListOf<String>()
@@ -81,6 +105,7 @@ abstract class PanelActivity : ComponentActivity() {
         enableEdgeToEdge()
         Session.attach(this)
         refreshPermission()
+        focusSearch.value = intent.action == Intent.ACTION_MAIN
         if (savedInstanceState == null) handleShare(intent)
         Updater.autoUpdate(applicationContext)
         // The save folders are checked on every start, so ones deleted by hand come back.
@@ -103,6 +128,7 @@ abstract class PanelActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        focusSearch.value = intent.action == Intent.ACTION_MAIN
         handleShare(intent)
     }
 
@@ -139,6 +165,8 @@ abstract class PanelActivity : ComponentActivity() {
         val step by Session.step.collectAsState()
         val active by Session.active.collectAsState()
         val replacement by Session.pendingReplace.collectAsState()
+        val recents by Session.recents.collectAsState()
+        val saved by Session.savedCopy.collectAsState()
         val allowed by notificationsOn
         var page by rememberSaveable { mutableStateOf(Page.MAIN) }
         val ctx = this@PanelActivity
@@ -167,7 +195,7 @@ abstract class PanelActivity : ComponentActivity() {
 
         // A link shared while a song is in progress: the user chooses which one goes on.
         if (replacement != null) {
-            AlertDialog(
+            AppAlertDialog(
                 onDismissRequest = { Session.keepCurrent() },
                 title = { Text(stringResource(R.string.replace_title)) },
                 text = { Text(stringResource(R.string.replace_text)) },
@@ -176,6 +204,21 @@ abstract class PanelActivity : ComponentActivity() {
                 },
                 dismissButton = {
                     TextButton(onClick = { Session.keepCurrent() }) { Text(stringResource(R.string.replace_keep)) }
+                },
+            )
+        }
+
+        // The song is already in the save folder: use that copy or download it again. One of the two must be picked.
+        if (saved != null) {
+            AppAlertDialog(
+                onDismissRequest = {},
+                title = { Text(stringResource(R.string.use_saved_title)) },
+                text = { Text(stringResource(R.string.use_saved_text)) },
+                confirmButton = {
+                    TextButton(onClick = { Session.useSaved(ctx) }) { Text(stringResource(R.string.use_saved)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { Session.redownload(ctx) }) { Text(stringResource(R.string.redownload)) }
                 },
             )
         }
@@ -205,23 +248,34 @@ abstract class PanelActivity : ComponentActivity() {
         }
 
         val title = when (step) {
-            is Step.Search -> R.string.search
-            is Step.Downloading -> R.string.downloading
+            is Step.Downloading -> R.string.download_title
             is Step.Trim -> R.string.trim_title
+            is Step.Share -> R.string.share
             else -> R.string.app_name
         }
+        // The trim page is titled with the song: the main artist and the title.
+        val heading = (step as? Step.Trim)?.let { trimHeading(it) } ?: stringResource(title)
         Box(Modifier.fillMaxWidth().offset(y = lift)) {
             PanelHeader(
-                stringResource(title),
-                // Every page except home has a cancel that goes back to home.
-                onCancel = if (step !is Step.Home) ({ Session.finish(ctx) }) else null,
-                // The save folder is one tap away on every page.
-                onFolder = { Audio.openFolder(ctx, Prefs(ctx).saveDir) },
-                onSettings = {
+                heading,
+                onTitle = if (step is Step.Trim) ({ Session.renameRequests.tryEmit(Unit) }) else null,
+                // Share goes back to trim with the edits kept; trim goes straight home and closes the song.
+                onBack = when (step) {
+                    is Step.Share -> ({ Session.backToTrim() })
+                    is Step.Trim -> ({ Session.finish(ctx) })
+                    else -> null
+                },
+                // The other pages (not home, trim or share) have a cancel that goes back to home.
+                onCancel = if (step !is Step.Home && step !is Step.Trim) ({ Session.finish(ctx) }) else null,
+                centerTitle = step is Step.Downloading || step is Step.Home,
+                settingsAtStart = step is Step.Home,
+                // The save folder is one tap away on every page; the download page only offers cancel.
+                onFolder = if (step is Step.Downloading) null else ({ Audio.openFolder(ctx, Prefs(ctx).saveDir) }),
+                onSettings = if (step is Step.Downloading) null else ({
                     // Settings are long, so the panel opens fully.
                     page = Page.SETTINGS
                     sheet?.openSettings()
-                },
+                }),
             )
         }
         if (!allowed) {
@@ -238,32 +292,47 @@ abstract class PanelActivity : ComponentActivity() {
             modifier = Modifier.weight(1f, fill = false),
             // Pages start at the top; the default centering pushed a taller page up into the header.
             contentAlignment = Alignment.TopStart,
-            contentKey = { it.javaClass },
+            // Home and search are one page, so moving between them does not slide.
+            contentKey = { if (it is Step.Home) Step.Search::class.java else it.javaClass },
             transitionSpec = {
-                if (targetState is Step.Downloading) {
-                    (slideInHorizontally { it } + fadeIn()) togetherWith (slideOutHorizontally { -it } + fadeOut())
-                } else {
-                    (slideInHorizontally { -it } + fadeIn()) togetherWith (slideOutHorizontally { it } + fadeOut())
+                when {
+                    targetState is Step.Downloading || targetState is Step.Share ->
+                        (slideInHorizontally { it } + fadeIn()) togetherWith (slideOutHorizontally { -it } + fadeOut())
+                    // Back from trim the panel is shrinking, so the page only fades; a slide on top of that looks like a fall.
+                    initialState is Step.Trim -> fadeIn() togetherWith fadeOut()
+                    else -> (slideInHorizontally { -it } + fadeIn()) togetherWith (slideOutHorizontally { it } + fadeOut())
                 }
             },
             label = "panel page",
         ) { s ->
             Column(Modifier.fillMaxWidth()) {
                 when (s) {
-                    Step.Home -> HomeScreen(onOpen = { submit(it) })
+                    // The start page is the search page before any search: the box and the recent songs.
+                    Step.Home -> SearchScreen(
+                        Step.Search(null, ""),
+                        onSearch = { submit(it) },
+                        onPick = {},
+                        onClear = {},
+                        recents = recents,
+                        onRecent = { Session.openRecent(ctx, it) },
+                        onRemoveRecent = { Session.removeRecent(ctx, it) },
+                        autoFocus = focusSearch.value,
+                    )
                     is Step.Downloading -> DownloadScreen(s, active)
                     is Step.Search -> SearchScreen(
                         s,
                         onSearch = { Session.search(ctx, it) },
+                        onMore = { Session.searchMore(ctx) },
                         onPick = { Session.pick(ctx, it) },
                         onClear = { Session.finish(ctx) },
                     )
                     is Step.Trim -> key(s.file) {
-                        TrimScreen(s, onDone = {
-                            Session.finish(ctx)
-                            if (Session.active.value == null) close()
-                        })
+                        TrimScreen(s, onShare = { edits, files, kind -> Session.toShare(s, edits, files, kind) })
                     }
+                    is Step.Share -> ShareScreen(s, onDone = {
+                        Session.finish(ctx)
+                        if (Session.active.value == null) close()
+                    })
                     is Step.Failed -> FailedScreen(
                         s,
                         onRetry = { Session.retry(ctx) },

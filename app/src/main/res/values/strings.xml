@@ -3,8 +3,6 @@
     <string name="app_name" translatable="false">Songshare</string>
 
     <!-- Home -->
-    <string name="home_hint">Share a song link from YouTube, Spotify, Deezer, Apple Music, SoundCloud or Bandcamp with Songshare, or paste it below.</string>
-    <string name="paste_link">Search a song or paste a link</string>
     <string name="settings">Settings</string>
     <string name="back">Back</string>
     <string name="cancel">Cancel</string>
@@ -12,8 +10,12 @@
     <!-- Progress -->
     <string name="resolving">Finding the song...</string>
     <string name="searching">Searching...</string>
-    <string name="converting">Converting to MP3...</string>
-    <string name="preparing">Preparing...</string>
+    <string name="download_title">Downloading...</string>
+    <string name="recent_title">Recent downloads</string>
+    <string name="step_find">Finding</string>
+    <string name="step_download">Downloading</string>
+    <string name="step_convert">Converting</string>
+    <string name="step_ready">Ready</string>
     <string name="downloading">Downloading audio...</string>
     <string name="downloading_percent">Downloading audio: %1$d%%</string>
     <string name="progress_percent">%1$d%%</string>
@@ -22,17 +24,50 @@
     <!-- Search -->
     <string name="search_query">Artist and song, or a link</string>
     <string name="search">Search</string>
+    <string name="search_more">Show more</string>
+    <string name="did_you_mean">Did you mean: %1$s</string>
     <string name="hide_long">Hide long videos</string>
     <string name="hide_long_summary">Search results longer than 10 minutes, like albums and mixes, are not listed.</string>
 
     <!-- Trim -->
     <string name="trim_title">Trim</string>
     <string name="file_name">File name</string>
+    <string name="song_details">Song details</string>
+    <string name="artist">Artist</string>
+    <string name="song_title">Song title</string>
+    <string name="searching_lyrics">Searching lyrics...</string>
+    <string name="lyrics_not_found">No lyrics found</string>
+    <string name="paste_lyrics">Paste lyrics here</string>
+    <string name="use_lyrics">Use lyrics</string>
+    <string name="done">Done</string>
+    <string name="sync_aligned">Sync set to the current position.</string>
+    <string name="sync_enter">Synchronize</string>
+    <string name="sync_hint">Double-tap a lyric line to align it to the current playback position.</string>
+    <string name="sync_exit">Close sync</string>
+    <string name="sync_no_timed">These lyrics have no timing to sync.</string>
+    <string name="version_duration_off">Length differs from the song</string>
+    <string name="pick_lyrics_first">Select lyric lines first.</string>
+    <string name="video_failed">Couldn\'t create the lyrics video. Try again.</string>
+    <string name="kind_video">Video</string>
+    <string name="kind_mp3">MP3</string>
+    <string name="kind_card">Card</string>
+    <string name="clear">Clear</string>
+    <string name="lyrics_versions">Lyrics versions</string>
+    <string name="sync_title">Sync</string>
+    <string name="sync_seconds">%1$s s</string>
+    <string name="version_synced">Synced</string>
+    <string name="version_plain">Text only</string>
     <string name="start">Start</string>
     <string name="end">End</string>
-    <string name="clip_length">Clip length: %1$s</string>
     <string name="preview">Preview</string>
     <string name="stop">Stop</string>
+    <string name="trim_start">Start trim here</string>
+    <string name="trim_end">End trim here</string>
+    <string name="share_next">Finish</string>
+    <string name="use_saved_title">Use the saved file?</string>
+    <string name="use_saved_text">This song is already in your save folder.</string>
+    <string name="use_saved">Use</string>
+    <string name="redownload">Download again</string>
     <string name="share">Share</string>
     <string name="share_with">Send clip with</string>
     <string name="cut_failed">Could not cut the audio.</string>
@@ -46,7 +81,7 @@
     <string name="open_folder">Open save folder</string>
     <string name="no_folder_app">No app can open this folder.</string>
     <string name="save_dir">Save folder</string>
-    <string name="save_dir_default">Music/Clipped Songs</string>
+    <string name="save_dir_default">Music/Songshare</string>
     <string name="save_dir_reset">Use default folder</string>
     <string name="save_failed">Could not save the clip.</string>
 

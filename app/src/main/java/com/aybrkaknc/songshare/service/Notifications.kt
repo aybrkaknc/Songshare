@@ -56,7 +56,7 @@ object Notifications {
     fun status(context: Context, step: Step?) {
         val text = when (step) {
             is Step.Search -> if (step.loading) R.string.resolving else R.string.status_pick
-            is Step.Trim -> R.string.status_trim
+            is Step.Trim, is Step.Share -> R.string.status_trim
             is Step.Failed -> R.string.status_failed
             else -> null
         }

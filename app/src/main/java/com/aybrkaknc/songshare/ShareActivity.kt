@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
@@ -113,7 +114,8 @@ class ShareActivity : PanelActivity() {
             }
         }
 
-        BackHandler { dismiss() }
+        // Back on the share page returns to the trim page with the edits kept; anywhere else it closes the panel.
+        BackHandler { if (step is Step.Share) Session.backToTrim() else dismiss() }
 
         Box(Modifier.fillMaxSize()) {
             Box(
@@ -121,6 +123,8 @@ class ShareActivity : PanelActivity() {
                     .background(Color.Black.copy(alpha = SCRIM_ALPHA * (sheet.heightDp / sheet.halfHeight).coerceIn(0f, 1f)))
                     .pointerInput(Unit) { detectTapGestures { dismiss() } },
             )
+            // The keyboard lifts the whole panel, so its bottom edge stays above the keyboard.
+            Box(Modifier.fillMaxSize().imePadding()) {
             Surface(
                 modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth()
                     // Auto: the content decides, up to a share of the screen, and size changes ease in.
@@ -159,6 +163,7 @@ class ShareActivity : PanelActivity() {
                     PanelContent(close = { sheet.close(::hidePanel) }, sheet = sheet)
                 }
             }
+            }
         }
     }
 }
@@ -166,16 +171,13 @@ class ShareActivity : PanelActivity() {
 private const val SCRIM_ALPHA = 0.32f
 // The search page grows with its content up to this share of the screen height.
 private const val RESULTS_RATIO = 0.75f
-// The home page has a hint and a link field above its button, so it needs room for both.
-private const val HOME_DP = 300f
-
-// Fixed panel height in dp per page; null means the page wraps its content (the search page).
+// Fixed panel height in dp per page; null means the page wraps its content (start, search and download pages).
 internal fun heightFor(step: Step): Float? = when (step) {
-    Step.Home -> HOME_DP
+    Step.Home -> null
     is Step.Search -> null
-    is Step.Downloading -> DOWNLOAD_FIT_DP
-    is Step.Trim -> TRIM_FIT_DP
+    is Step.Downloading -> null
+    // The trim page holds the waveform and the lyrics, so it takes the full height.
+    is Step.Trim -> Float.MAX_VALUE
+    is Step.Share -> Float.MAX_VALUE
     is Step.Failed -> Float.MAX_VALUE
 }
-private const val DOWNLOAD_FIT_DP = 280f
-private const val TRIM_FIT_DP = 540f

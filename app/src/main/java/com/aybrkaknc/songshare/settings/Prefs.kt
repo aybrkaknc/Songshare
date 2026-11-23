@@ -20,7 +20,7 @@ class Prefs(context: Context) {
         )
     }
 
-    // "system", "en" or "tr". Applied in MainActivity.attachBaseContext.
+    // "system", "en" or "tr". Applied in PanelActivity.attachBaseContext.
     var language: String
         get() = settings.getString(KEY_LANGUAGE, "system") ?: "system"
         set(v) = settings.edit { putString(KEY_LANGUAGE, v) }
@@ -40,6 +40,21 @@ class Prefs(context: Context) {
         get() = settings.getBoolean(KEY_HIDE_LONG, true)
         set(v) = settings.edit { putBoolean(KEY_HIDE_LONG, v) }
 
+    // When yt-dlp was last checked for an update at launch (epoch milliseconds); the check runs at most once a day.
+    var lastUpdateCheckMs: Long
+        get() = settings.getLong(KEY_LAST_UPDATE_CHECK, 0L)
+        set(v) = settings.edit { putLong(KEY_LAST_UPDATE_CHECK, v) }
+
+    // Set after the first lyric line was aligned by a double tap; the hint effect on the first line stops then.
+    var syncHintDone: Boolean
+        get() = settings.getBoolean(KEY_SYNC_HINT_DONE, false)
+        set(v) = settings.edit { putBoolean(KEY_SYNC_HINT_DONE, v) }
+
+    // The last downloaded songs as a JSON array; Session reads and writes it.
+    var recentsJson: String
+        get() = settings.getString(KEY_RECENTS, "[]") ?: "[]"
+        set(v) = settings.edit { putString(KEY_RECENTS, v) }
+
     var spotifyClientId: String
         get() = secrets.getString(KEY_CLIENT_ID, "") ?: ""
         set(v) = secrets.edit { putString(KEY_CLIENT_ID, v.trim()) }
@@ -53,6 +68,9 @@ class Prefs(context: Context) {
         const val KEY_AUTO_UPDATE = "auto_update"
         const val KEY_HIDE_LONG = "hide_long_results"
         const val KEY_SAVE_DIR = "save_dir"
+        const val KEY_RECENTS = "recents"
+        const val KEY_SYNC_HINT_DONE = "sync_hint_done"
+        const val KEY_LAST_UPDATE_CHECK = "last_update_check"
         const val KEY_CLIENT_ID = "spotify_client_id"
         const val KEY_CLIENT_SECRET = "spotify_client_secret"
     }

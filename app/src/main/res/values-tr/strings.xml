@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Home -->
-    <string name="home_hint">YouTube, Spotify, Deezer, Apple Music, SoundCloud veya Bandcamp\'tan bir şarkı linkini Songshare ile paylaş ya da aşağıya yapıştır.</string>
-    <string name="paste_link">Şarkı ara veya link yapıştır</string>
     <string name="settings">Ayarlar</string>
     <string name="back">Geri</string>
     <string name="cancel">İptal</string>
@@ -10,8 +8,12 @@
     <!-- Progress -->
     <string name="resolving">Şarkı aranıyor...</string>
     <string name="searching">Aranıyor...</string>
-    <string name="converting">MP3\'e dönüştürülüyor...</string>
-    <string name="preparing">Hazırlanıyor...</string>
+    <string name="download_title">İndiriliyor...</string>
+    <string name="recent_title">Son indirilenler</string>
+    <string name="step_find">Bulunuyor</string>
+    <string name="step_download">İndiriliyor</string>
+    <string name="step_convert">Dönüştürülüyor</string>
+    <string name="step_ready">Hazır</string>
     <string name="downloading">Ses indiriliyor...</string>
     <string name="downloading_percent">Ses indiriliyor: %%%1$d</string>
     <string name="progress_percent">%%%1$d</string>
@@ -20,17 +22,50 @@
     <!-- Search -->
     <string name="search_query">Sanatçı ve şarkı veya link</string>
     <string name="search">Ara</string>
+    <string name="search_more">Daha fazla göster</string>
+    <string name="did_you_mean">Bunu mu demek istediniz: %1$s</string>
     <string name="hide_long">Uzun videoları gizle</string>
     <string name="hide_long_summary">Albüm ve mix gibi 10 dakikadan uzun arama sonuçları listelenmez.</string>
 
     <!-- Trim -->
     <string name="trim_title">Kırp</string>
     <string name="file_name">Dosya adı</string>
+    <string name="song_details">Şarkı bilgileri</string>
+    <string name="artist">Sanatçı</string>
+    <string name="song_title">Şarkı adı</string>
+    <string name="searching_lyrics">Sözler aranıyor...</string>
+    <string name="lyrics_not_found">Söz bulunamadı</string>
+    <string name="paste_lyrics">Sözleri buraya yapıştır</string>
+    <string name="use_lyrics">Sözleri kullan</string>
+    <string name="done">Tamam</string>
+    <string name="sync_aligned">Senkron o anki konuma göre ayarlandı.</string>
+    <string name="sync_enter">Senkronize Et</string>
+    <string name="sync_hint">Bir söz satırına çift dokun, o an çalan yere hizalansın.</string>
+    <string name="sync_exit">Senkronu kapat</string>
+    <string name="sync_no_timed">Bu sözlerde senkronlanacak zaman bilgisi yok.</string>
+    <string name="version_duration_off">Süre şarkıdan farklı</string>
+    <string name="pick_lyrics_first">Önce şarkı sözü satırı seçmelisiniz.</string>
+    <string name="video_failed">Sözlü video oluşturulamadı. Tekrar dene.</string>
+    <string name="kind_video">Video</string>
+    <string name="kind_mp3">MP3</string>
+    <string name="kind_card">Kart</string>
+    <string name="clear">Temizle</string>
+    <string name="lyrics_versions">Söz sürümleri</string>
+    <string name="sync_title">Senkron</string>
+    <string name="sync_seconds">%1$s sn</string>
+    <string name="version_synced">Zamanlı</string>
+    <string name="version_plain">Yalnız metin</string>
     <string name="start">Başlangıç</string>
     <string name="end">Bitiş</string>
-    <string name="clip_length">Kesit süresi: %1$s</string>
     <string name="preview">Dinle</string>
     <string name="stop">Durdur</string>
+    <string name="trim_start">Kırpma başlangıcını buraya al</string>
+    <string name="trim_end">Kırpma bitişini buraya al</string>
+    <string name="share_next">Bitir</string>
+    <string name="use_saved_title">Kayıtlı dosya kullanılsın mı?</string>
+    <string name="use_saved_text">Bu şarkı kayıt klasöründe zaten var.</string>
+    <string name="use_saved">Kullan</string>
+    <string name="redownload">Yeniden İndir</string>
     <string name="share">Paylaş</string>
     <string name="share_with">Kesiti gönder</string>
     <string name="cut_failed">Ses kesilemedi.</string>
@@ -44,7 +79,7 @@
     <string name="open_folder">Kayıt klasörünü aç</string>
     <string name="no_folder_app">Bu klasörü açabilecek bir uygulama yok.</string>
     <string name="save_dir">Kayıt klasörü</string>
-    <string name="save_dir_default">Müzik/Clipped Songs</string>
+    <string name="save_dir_default">Müzik/Songshare</string>
     <string name="save_dir_reset">Varsayılan klasöre dön</string>
     <string name="save_failed">Kesit kaydedilemedi.</string>
 

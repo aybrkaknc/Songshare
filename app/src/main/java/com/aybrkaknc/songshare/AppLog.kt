@@ -21,4 +21,14 @@ object AppLog {
     }
 
     fun clear() = synchronized(this) { state.value = emptyList() }
+
+    // Runs the block and logs how long it took, also when it fails, so slow steps show up in the log.
+    inline fun <T> timed(label: String, block: () -> T): T {
+        val started = System.nanoTime()
+        try {
+            return block()
+        } finally {
+            d("$label: ${(System.nanoTime() - started) / 1_000_000} ms")
+        }
+    }
 }
